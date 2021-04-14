@@ -8,3 +8,4 @@ python/envs*/
 *.zip
 Methods.pdf
 Methods.Rmd
+packrat/lib*/

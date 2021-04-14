@@ -3,10 +3,8 @@ import statistics
 import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.stats import nbinom
-
-TRANSMISSION_POTENTIAL_MEAN = 1.3
-TRANSMISSION_POTENTIAL_SD = 0.15
-NUM_ESCAPED = 10
+from tqdm import tqdm
+from matplotlib import gridspec
 
 np.random.seed(1337)
 
