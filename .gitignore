@@ -1,0 +1,10 @@
+packrat/*
+.Rproj.user
+python/envs*/
+.RData
+.Rhistory
+.Rprofile
+*.docx
+*.zip
+Methods.pdf
+Methods.Rmd
