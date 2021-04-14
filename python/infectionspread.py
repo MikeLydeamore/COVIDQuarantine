@@ -88,7 +88,8 @@ def run_generation(num_infected, infection_times, transmission_potential_mean = 
     return (return_dict)
     
 
-def run_outbreak(num_escaped, max_generations, generation_zero_times = None, max_infections = np.inf, transmission_potential_mean = 1.3, dispersion = 0.1, in_isolation = None, verbose=False):
+def run_outbreak(num_escaped, max_generations, generation_zero_times = None, max_infections = np.inf, max_time = 100,
+                 transmission_potential_mean = 1.3, dispersion = 0.1, in_isolation = None, verbose=False):
     if generation_zero_times is None:
         generation_zero_times = np.zeros(num_escaped)
     
@@ -105,8 +106,8 @@ def run_outbreak(num_escaped, max_generations, generation_zero_times = None, max
     iter = 0
     generations = []
     generations.append(generation_zero)
-    while iter < max_generations and generations[iter]["next_generation_infections"] > 0 \
-    and get_finalsize(generations) < max_infections:
+    while generations[iter]["next_generation_infections"] > 0 \
+    and get_finalsize(generations) < max_infections and min(generations[iter]["infection_times"]) < max_time:
         if in_isolation == "all":
             next_generation = run_generation(generations[iter]["next_generation_infections"], generations[iter]["infection_times"], dispersion = dispersion, in_isolation=True,
             transmission_potential_mean=transmission_potential_mean)
