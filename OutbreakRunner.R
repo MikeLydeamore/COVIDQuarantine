@@ -63,7 +63,9 @@ get_infections <- function(outbreak, max_time) {
 run_outbreak_multiple <- function(initial_infected, transmission_potential_mean, iterations, 
                                   dispersion = 0.1, max_infections = Inf, max_generations = 25, max_time = 100) {
   
-  lapply(1:iterations, function(iter) {
+  
+    progress <- txtProgressBar(min=0, max=iterations, style=3)
+    outbreaks <- lapply(1:iterations, function(iter) {
     
     ob <- run_outbreak.wrapper(initial_infected = initial_infected, 
                                transmission_potential_mean = transmission_potential_mean, 
@@ -72,8 +74,21 @@ run_outbreak_multiple <- function(initial_infected, transmission_potential_mean,
                                max_generations = max_generations,
                                max_time = max_time)
     
-    infections <- get_infections(ob, max_time)
+    setTxtProgressBar(progress, iter)
+    
+    return (ob)
+    
+  })
+  
+  infections <- lapply(1:iterations, function(iter) {
+    infections <- get_infections(outbreaks[[iter]], max_time)
     infections[, iteration := iter]
+    
+    return (infections)
   }) %>% rbindlist()
+  
+  close(progress)
+  
+  return (list(infections=infections, outbreaks=outbreaks))
   
 }
