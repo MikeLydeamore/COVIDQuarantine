@@ -108,11 +108,14 @@ def run_outbreak(num_escaped, max_generations, generation_zero_times = None, max
     generations.append(generation_zero)
     while generations[iter]["next_generation_infections"] > 0 \
     and get_finalsize(generations) < max_infections and min(generations[iter]["infection_times"]) < max_time:
+        chains_to_continue = np.less_equal(generations[iter]["infection_times"], max_time)
+        next_generation_infections = sum(chains_to_continue)
+        next_infection_times = generations[iter]["infection_times"][chains_to_continue]
         if in_isolation == "all":
-            next_generation = run_generation(generations[iter]["next_generation_infections"], generations[iter]["infection_times"], dispersion = dispersion, in_isolation=True,
+            next_generation = run_generation(next_generation_infections, next_infection_times, dispersion = dispersion, in_isolation=True,
             transmission_potential_mean=transmission_potential_mean)
         else:
-            next_generation = run_generation(generations[iter]["next_generation_infections"], generations[iter]["infection_times"], dispersion = dispersion, in_isolation=False,
+            next_generation = run_generation(next_generation_infections, next_infection_times, dispersion = dispersion, in_isolation=False,
             transmission_potential_mean=transmission_potential_mean)
         generations.append(next_generation)
 
