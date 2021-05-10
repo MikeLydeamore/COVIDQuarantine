@@ -28,7 +28,10 @@ def get_infection_times(num_infections, scale=5.5, shape=1.8):
 
     return (infection_times)
 
-def run_generation(num_infected, infection_times, transmission_potential_mean = 1.3, transmission_potential_sd = 0.15, dispersion = 0.1, in_quarantine=False, in_isolation=False):
+def run_generation(num_infected, infection_times, 
+                  transmission_potential_mean = 1.3, transmission_potential_sd = 0.15, dispersion = 0.1, 
+                  in_quarantine=False, times_left_quarantine = None, 
+                  in_isolation=False, times_left_isolation = None):
     secondary_infection_distribution = np.zeros(num_infected)
     next_generation_infections = 0
     next_generation_infections_time = []
@@ -42,14 +45,26 @@ def run_generation(num_infected, infection_times, transmission_potential_mean = 
         secondary_infection_distribution[i] = get_secondary_infections(transmission_potential, dispersion = dispersion)
 
         if in_quarantine:
-            time_left_quarantine = np.random.poisson(1)
+            if times_left_quarantine is None:
+                #No times to leave quarantine specified (default) so fall back to the Poisson.
+                time_left_quarantine = np.random.poisson(1)
+            else:
+                #I understand this is poorly named and I'm sure will come back to bite me.
+                time_left_quarantine = times_left_quarantine[i]
         else:
             time_left_quarantine = 0
         
         #Assuming they enter isolation 3 days after leaving quarantine.
         #Note if they leave quarantine on day 8, then isolate on day 11, the isolation is useless.
         if in_isolation:
-            time_entered_isolation = 3+time_left_quarantine
+            if times_entered_isolation is None:
+                #Same fallback logic as the in_quarantine block.
+
+                #Assuming they enter isolation 3 days after leaving quarantine.
+                #Note if they leave quarantine on day 8, then isolate on day 11, the isolation is useless.
+                time_entered_isolation = 3+time_left_quarantine
+            else:
+                time_entered_isolation = times_left_isolation[i]
         else:
             time_entered_isolation = np.inf
 
