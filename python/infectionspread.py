@@ -31,7 +31,7 @@ def get_infection_times(num_infections, scale=5.5, shape=1.8):
 def run_generation(num_infected, infection_times, 
                   transmission_potential_mean = 1.3, transmission_potential_sd = 0.15, dispersion = 0.1, 
                   in_quarantine=False, times_left_quarantine = None, 
-                  in_isolation=False, times_left_isolation = None):
+                  in_isolation=False, times_entered_isolation = None):
     secondary_infection_distribution = np.zeros(num_infected)
     next_generation_infections = 0
     next_generation_infections_time = []
@@ -64,7 +64,7 @@ def run_generation(num_infected, infection_times,
                 #Note if they leave quarantine on day 8, then isolate on day 11, the isolation is useless.
                 time_entered_isolation = 3+time_left_quarantine
             else:
-                time_entered_isolation = times_left_isolation[i]
+                time_entered_isolation = times_entered_isolation[i]
         else:
             time_entered_isolation = np.inf
 
@@ -103,15 +103,28 @@ def run_generation(num_infected, infection_times,
     return (return_dict)
     
 
-def run_outbreak(num_escaped, max_generations, generation_zero_times = None, max_infections = np.inf, max_time = 100,
-                 transmission_potential_mean = 1.3, dispersion = 0.1, in_isolation = None, verbose=False):
+def run_outbreak(num_escaped, max_generations, generation_zero_times = None, 
+                generation_zero_time_left_quarantine = None,
+                max_infections = np.inf, max_time = 100,
+                transmission_potential_mean = 1.3, dispersion = 0.1, 
+                in_isolation = None, generation_zero_time_entered_isolation = None,
+                verbose=False):
+
     if generation_zero_times is None:
+        #If no generation zero times supplied, assume infections start at t=0.
         generation_zero_times = np.zeros(num_escaped)
     
     if in_isolation is None:
-        generation_zero = run_generation(num_escaped, generation_zero_times, dispersion = dispersion, in_isolation = False, in_quarantine=True, transmission_potential_mean=transmission_potential_mean)
+        #No isolation here so don't need to pass n time_left_isolation.
+        generation_zero = run_generation(num_escaped, generation_zero_times, dispersion=dispersion, 
+                                        in_quarantine=True, times_left_quarantine=generation_zero_time_left_quarantine,
+                                        in_isolation=False, 
+                                        transmission_potential_mean=transmission_potential_mean)
     else:
-        generation_zero = run_generation(num_escaped, generation_zero_times, dispersion = dispersion, in_isolation = True, in_quarantine=True, transmission_potential_mean=transmission_potential_mean)
+        generation_zero = run_generation(num_escaped, generation_zero_times, dispersion=dispersion, 
+                                        in_quarantine=True, times_left_quarantine=generation_zero_time_left_quarantine,
+                                        in_isolation=True, times_entered_isolation=generation_zero_time_entered_isolation,
+                                        transmission_potential_mean=transmission_potential_mean)
 
     if verbose:
         print(num_escaped, "individuals escaped quarantine while positive.")
@@ -127,11 +140,11 @@ def run_outbreak(num_escaped, max_generations, generation_zero_times = None, max
         next_generation_infections = sum(chains_to_continue)
         next_infection_times = generations[iter]["infection_times"][chains_to_continue]
         if in_isolation == "all":
-            next_generation = run_generation(next_generation_infections, next_infection_times, dispersion = dispersion, in_isolation=True,
-            transmission_potential_mean=transmission_potential_mean)
+            next_generation = run_generation(next_generation_infections, next_infection_times, dispersion=dispersion, in_isolation=True,
+                                            transmission_potential_mean=transmission_potential_mean)
         else:
-            next_generation = run_generation(next_generation_infections, next_infection_times, dispersion = dispersion, in_isolation=False,
-            transmission_potential_mean=transmission_potential_mean)
+            next_generation = run_generation(next_generation_infections, next_infection_times, dispersion=dispersion, in_isolation=False,
+                                            transmission_potential_mean=transmission_potential_mean)
         generations.append(next_generation)
 
         iter += 1
