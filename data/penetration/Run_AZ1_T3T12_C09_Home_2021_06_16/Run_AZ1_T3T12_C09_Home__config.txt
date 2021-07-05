@@ -1,0 +1,63 @@
+configuration input parameters: 
+
+             ******* 
+
+             Reproductive Ratio (homogeneous calib.): 2.0  
+
+             simulation time: 400000.0  
+
+             time step: 0.1  
+
+             burn-in time (arb): 1000.0 
+
+             baseline importation rate p(I | unvac., arrival): 0.01 
+
+             vaccinated importation rate p(I | vac., arrival): 0.0036 
+
+             quarantine duration: 14.0 
+
+             contact extension duration: 14.0 
+
+             case isolation duration (extended from symptom onset): 10.0 
+
+             quarantine environment: Home 
+
+             contacts transferred to MediHotel: false 
+
+             test days: [3.0, 12.0] 
+
+             extension test days: [3.0, 12.0] 
+
+             test report delay: 1.0 
+
+             clinical detection (via symptoms): true 
+
+             group size (close contacts): 4 
+
+             n travellers: 100 
+
+             n workers: 20 
+
+             work roster: AbstractVector{T} where T[[7, 5, 3, 1], [0.0, 1.0, 0.0, 0.0]] 
+
+             compliance probability: 0.9 
+
+             proportion of workers vaccinated: 0.0 
+
+             proportion of travellers vaccinated: 0.0 
+
+             all index cases vaccinated: true 
+
+             vaccine efficacy against infection: 0.64 
+
+             vaccine efficacy against transmission: 0.47 
+
+             Hotel transmission factor (Traveller, Traveller, same group): 1.0 
+
+             Hotel transmission factor (Traveller, Traveller, different group): 0.01 
+
+             Hotel transmission factor (Traveller, Worker): 0.01 
+
+             Hotel transmission factor (Worker, Worker): 0.1 
+
+             *******

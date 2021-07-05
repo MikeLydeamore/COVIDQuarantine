@@ -9,7 +9,13 @@ import infectionspread
 def calculate_concurrent_outbreaks(transmission_potential, breaches_over_horizon, quarantine_type, quarantine_duration, df_traveller):
     
     time_between_breaches = df_traveller["time_discharged"][1:].values - df_traveller["time_discharged"][0:-1].values
-    breach_times = np.cumsum(random.choices(time_between_breaches, k=breaches_over_horizon))
+    unscaled_times = random.choices(time_between_breaches, k=breaches_over_horizon)
+    if quarantine_duration == 7:
+        unscaled_times = [x/60 for x in unscaled_times]
+    else:
+        unscaled_times = [x/30 for x in unscaled_times]
+        
+    breach_times = np.cumsum(unscaled_times)
     gen_zero_times = random.choices(df_traveller["time_left_quarantine"], k=breaches_over_horizon)
     ob = []
 
@@ -49,9 +55,9 @@ def calculate_concurrent_outbreaks(transmission_potential, breaches_over_horizon
     })
     
 
-def concurrent_outbreak_probabilities(transmission_potential, breaches_over_horizon, quarantine_type, quarantine_duration, max_iterations=10000):
+def concurrent_outbreak_probabilities(transmission_potential, breaches_over_horizon, quarantine_type, quarantine_duration, travellers_vaccinated, max_iterations=10000):
     #Data loading  block:
-    filename = "..\data\penetration\TUnvacc_%s_%sd_traveller_breach_timeseries.csv" % (quarantine_type, str(quarantine_duration))
+    filename = "./data/penetration/T%s_WUnvacc_%s_%sd_traveller_breach_timeseries.csv" % (travellers_vaccinated, quarantine_type, str(quarantine_duration))
     df_traveller = pd.read_csv(filename)
     df_traveller["time_left_quarantine"] = df_traveller["t_incubation"] + df_traveller["t_post_incubation"] - df_traveller["days_infectious_community"]
 
@@ -61,9 +67,13 @@ def concurrent_outbreak_probabilities(transmission_potential, breaches_over_hori
         avg_breaches = num_breaches / time_period
 
         time_horizon = 365
-        breaches_over_horizon = round(avg_breaches * time_horizon)
+        if quarantine_duration == 7:
+            arrivals_multiplier = 60
+        else:
+            arrivals_multiplier = 30
+        breaches_over_horizon = round(avg_breaches * time_horizon * arrivals_multiplier)
 
-        print(str(breaches_over_horizon)+" breaches for TP="+str(transmission_potential)+" and quarantine length="+str(quarantine_duration))
+        print(str(breaches_over_horizon)+" breaches for TP="+str(transmission_potential)+" and quarantine length="+str(quarantine_duration), flush=True)
 
     concurrent_outbreaks = []
     for i in range(max_iterations):

@@ -6,8 +6,6 @@ from scipy.stats import nbinom
 from tqdm import tqdm
 from matplotlib import gridspec
 
-np.random.seed(1337)
-
 def get_secondary_infections(transmission_potential, dispersion=0.1):
 
     # Python uses a messed up definition of a negative binomial, where you give the number of successes, P(success)
@@ -106,7 +104,9 @@ def run_generation(num_infected, infection_times,
 def run_outbreak(num_escaped, max_generations, generation_zero_times = None, 
                 generation_zero_time_left_quarantine = None,
                 max_infections = np.inf, max_time = 100,
-                transmission_potential_mean = 1.3, dispersion = 0.1, 
+                transmission_potential_mean = 1.3, 
+                generation_zero_transmission_potential_mean = 1.3,
+                dispersion = 0.1, 
                 in_isolation = None, generation_zero_time_entered_isolation = None,
                 verbose=False):
 
@@ -119,12 +119,12 @@ def run_outbreak(num_escaped, max_generations, generation_zero_times = None,
         generation_zero = run_generation(num_escaped, generation_zero_times, dispersion=dispersion, 
                                         in_quarantine=True, times_left_quarantine=generation_zero_time_left_quarantine,
                                         in_isolation=False, 
-                                        transmission_potential_mean=transmission_potential_mean)
+                                        transmission_potential_mean=generation_zero_transmission_potential_mean)
     else:
         generation_zero = run_generation(num_escaped, generation_zero_times, dispersion=dispersion, 
                                         in_quarantine=True, times_left_quarantine=generation_zero_time_left_quarantine,
                                         in_isolation=True, times_entered_isolation=generation_zero_time_entered_isolation,
-                                        transmission_potential_mean=transmission_potential_mean)
+                                        transmission_potential_mean=generation_zero_transmission_potential_mean)
 
     if verbose:
         print(num_escaped, "individuals escaped quarantine while positive.")
