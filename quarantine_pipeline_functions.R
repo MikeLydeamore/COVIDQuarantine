@@ -17,7 +17,7 @@ probability_of_major_outbreak <- function(max_iterations, transmission_potential
   }
   
   else if (type == "worker")
-    df[, time_left_quarantine := 0][, time_entered_isolation := days_to_detection]
+    df[, time_left_quarantine := 0][, time_entered_isolation := exposure_days]
   
   
   outbreaks <- replicate(n = max_iterations, { 
@@ -52,7 +52,7 @@ probability_of_major_outbreak <- function(max_iterations, transmission_potential
 
 #To work out when a major outbreak will happen for a given # of infected, we just use the distribution of time between breaches.
 timing_of_major_outbreak <- function(max_iterations, ob_prob, quarantine_type, quarantine_duration, 
-                                     travellers_vaccinated, num_arrivals, infected_proportion, filename=NA,
+                                     travellers_vaccinated, num_arrivals, infected_proportion, filename=NA, filename_workers=NA,
                                      scaling_factor=NA) {
   if (is.na(filename)) {
     filename <- paste0("./data/penetration/T", travellers_vaccinated, "_WUnvacc_", quarantine_type, "_", quarantine_duration, "d_traveller_breach_timeseries.csv")
@@ -62,7 +62,7 @@ timing_of_major_outbreak <- function(max_iterations, ob_prob, quarantine_type, q
   if (quarantine_type == "HomeQuar") {
     breach_time_distribution <- diff(df$time_discharged)
     if (is.na(scaling_factor)) {
-      scaling_factor <- num_arrivals / 100 * (infected_proportion / 0.01) #100 arrivals from Cam's outputs
+      scaling_factor <- num_arrivals / 50 * (infected_proportion / 0.01) #100 arrivals from Cam's outputs
       if (quarantine_duration == 7) {
         scaling_factor <- scaling_factor * 2
       }
@@ -80,15 +80,15 @@ timing_of_major_outbreak <- function(max_iterations, ob_prob, quarantine_type, q
   
   else {
     
-    fname_workers <- paste0("./data/penetration/T", travellers_vaccinated, "_WUnvacc_", quarantine_type, "_", quarantine_duration, "d_worker_breach_timeseries.csv")
-    df_workers <- fread(fname_workers)
+    #fname_workers <- paste0("./data/penetration/T", travellers_vaccinated, "_WUnvacc_", quarantine_type, "_", quarantine_duration, "d_worker_breach_timeseries.csv")
+    df_workers <- fread(filename_workers)
     df_travellers <- df
     
-    df_combined <- rbind(df_travellers[, .(time_discharged)], df_workers[, .(time_discharged = time_removed-days_to_detection)])
+    df_combined <- rbind(df_travellers[, .(time_discharged)], df_workers[, .(time_discharged)])
     df_combined <- df_combined[order(time_discharged)]
     
     breach_time_distribution_travellers <- diff(df_travellers$time_discharged)
-    breach_time_distribution_workers <- diff(df_workers[, time_removed - days_to_detection])
+    breach_time_distribution_workers <- diff(df_workers$time_discharged)
     
     breach_time_distribution <- diff(df_combined$time_discharged)
     scaling_factor <- num_arrivals / 100 * (infected_proportion / 0.01) #100 arrivals from Cam's outputs
@@ -128,5 +128,36 @@ timing_of_major_outbreak <- function(max_iterations, ob_prob, quarantine_type, q
     
   }
   
+  
+}
+
+
+get_tps <- function(starting_tp, prop_vac, efficacy_infection = 0.91, efficacy_transmission = 0.65) {
+  
+  # transmission reduction = TP*(1-prop_vac*(1-(1-efficacy_infection)*(1-efficacy_transmission)))
+  
+  # for imported infections that are unvaccinated - re-compute TP without the reduction in infectiousness
+  #TP*(1-prop_vac*(1-(1-efficacy_infection)*(1-0)))
+  
+  # for imported infection that are vaccinated 
+  # use the TP without the reduction in infectiousness
+  # apply reduction in infectiousness due to vaccination 
+  
+  # overall transmission reduction
+  # population
+  overall_tr_pf <- 1-(1-efficacy_infection)*(1-efficacy_transmission)
+  new_tp_pop <- starting_tp*(1-prop_vac*overall_tr_pf)
+  
+  # unvaccinated import
+  overall_tr_import_unvac_pf <- 1-(1-efficacy_infection)*(1-0) 
+  new_tp_import_unvac <- starting_tp*(1-prop_vac*overall_tr_import_unvac_pf)
+  
+  # vaccinated import
+  new_tp_import_vac <- starting_tp*(1-(prop_vac*overall_tr_import_unvac_pf))*(1-efficacy_transmission)
+  
+  # tibble 
+  tibble::tribble(
+    ~population_coverage, ~starting_tp, ~new_pop_tp, ~new_tp_import_unvac, ~new_tp_import_vac,
+    prop_vac,             starting_tp,    new_tp_pop,   new_tp_import_unvac, new_tp_import_vac) 
   
 }
